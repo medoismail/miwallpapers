@@ -1,0 +1,147 @@
+---
+import "@/styles/global.css";
+import Layout from "../../layouts/Layout.astro";
+import SEO from "../../components/SEO.astro";
+import Header from "../../components/Header.astro";
+import Footer from "../../components/Footer.astro";
+import { siteConfig, cdnUrl } from "../../config";
+import metadata from "../../data/metadata.json";
+
+export function getStaticPaths() {
+  return metadata.images.map((img: any) => ({
+    params: { id: img.id },
+    props: { image: img },
+  }));
+}
+
+const { image } = Astro.props;
+const downloadUrl = cdnUrl("public" + image.original);
+const pageUrl = `${siteConfig.siteUrl}/p/${image.id}`;
+const ogImage = `${siteConfig.siteUrl}${image.srcSet[1080] || image.srcSet[720]}`;
+---
+
+<Layout>
+  <SEO
+    slot="head"
+    title={image.title}
+    description={`Free mobile wallpaper — ${image.title}. Download in original quality.`}
+    image={ogImage}
+    url={pageUrl}
+  />
+  <Header />
+
+  <main class="flex-1 flex flex-col items-center justify-center px-4 py-6 gap-6">
+    {/* Image */}
+    <div
+      class="relative w-full max-w-sm overflow-hidden rounded-2xl shadow-2xl"
+      style={`aspect-ratio:${image.width}/${image.height}; background-color:${image.dominantColor}`}
+    >
+      <img
+        src={image.srcSet[1080] || image.srcSet[720]}
+        srcset={`${image.srcSet[480]} 480w, ${image.srcSet[720]} 720w, ${image.srcSet[1080]} 1080w`}
+        sizes="(max-width:640px) 90vw, 384px"
+        alt={image.title}
+        class="h-full w-full object-cover"
+        style={`background-image:url(${image.placeholder});background-size:cover`}
+      />
+    </div>
+
+    {/* Info */}
+    <div class="flex flex-col items-center gap-3 text-center">
+      <h1 class="text-xl font-semibold tracking-tight">{image.title}</h1>
+
+      {image.tags.length > 0 && (
+        <div class="flex flex-wrap justify-center gap-2">
+          {image.tags.map((tag: string) => (
+            <span class="rounded-full border border-neutral-300 dark:border-neutral-700 px-3 py-0.5 text-xs">
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <p class="text-xs text-neutral-500">{image.width} &times; {image.height}</p>
+    </div>
+
+    {/* Actions */}
+    <div class="flex items-center gap-3">
+      <a
+        id="dl-btn"
+        href={downloadUrl}
+        class="flex items-center gap-2 rounded-full bg-black dark:bg-white text-white dark:text-black px-6 py-3 text-sm font-medium hover:opacity-80 transition-opacity"
+      >
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+        </svg>
+        Download Original
+      </a>
+
+      <button
+        id="copy-btn"
+        aria-label="Copy link"
+        class="flex items-center justify-center h-11 w-11 rounded-full border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors"
+      >
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+        </svg>
+      </button>
+
+      <button
+        id="share-btn"
+        aria-label="Share"
+        class="flex items-center justify-center h-11 w-11 rounded-full border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors"
+      >
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+          <path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98" />
+        </svg>
+      </button>
+    </div>
+
+    <a
+      href="/"
+      class="text-sm text-neutral-500 hover:text-black dark:hover:text-white underline underline-offset-2 transition-colors"
+    >
+      &larr; Back to gallery
+    </a>
+  </main>
+
+  <Footer />
+
+  <script define:vars={{ downloadUrl, imageId: image.id, imageTitle: image.title }}>
+    /* Download via fetch + blob for cross-origin */
+    document.getElementById("dl-btn").addEventListener("click", async (e) => {
+      e.preventDefault();
+      try {
+        const res = await fetch(downloadUrl);
+        const blob = await res.blob();
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = imageId + downloadUrl.substring(downloadUrl.lastIndexOf("."));
+        a.click();
+        URL.revokeObjectURL(a.href);
+      } catch {
+        window.open(downloadUrl, "_blank");
+      }
+    });
+
+    /* Copy link */
+    document.getElementById("copy-btn").addEventListener("click", () => {
+      navigator.clipboard.writeText(location.href).then(() => {
+        const btn = document.getElementById("copy-btn");
+        btn.classList.add("ring-2", "ring-black", "dark:ring-white");
+        setTimeout(() => btn.classList.remove("ring-2", "ring-black", "dark:ring-white"), 1200);
+      });
+    });
+
+    /* Share */
+    document.getElementById("share-btn").addEventListener("click", () => {
+      if (navigator.share) {
+        navigator.share({ title: imageTitle, url: location.href }).catch(() => {});
+      } else {
+        navigator.clipboard.writeText(location.href);
+      }
+    });
+  </script>
+</Layout>

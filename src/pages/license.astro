@@ -1,0 +1,56 @@
+---
+import "@/styles/global.css";
+import Layout from "../layouts/Layout.astro";
+import SEO from "../components/SEO.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+---
+
+<Layout>
+  <SEO slot="head" title="License" description="Free for personal and commercial use." />
+  <Header />
+
+  <main class="flex-1 mx-auto max-w-xl px-6 py-16">
+    <h1 class="text-2xl font-semibold tracking-tight mb-8">License</h1>
+
+    <div class="space-y-6 text-neutral-700 dark:text-neutral-300 text-[15px] leading-relaxed">
+      <p>
+        All wallpapers on this site are <strong class="text-black dark:text-white">free to use</strong>.
+      </p>
+
+      <div class="space-y-3">
+        <h2 class="text-black dark:text-white font-medium">What you can do</h2>
+        <ul class="list-disc list-inside space-y-1">
+          <li>Use wallpapers for <strong class="text-black dark:text-white">personal and commercial</strong> projects.</li>
+          <li>Use them as device wallpapers, in apps, websites, social media, or print.</li>
+          <li>Modify, crop, or edit them as needed.</li>
+        </ul>
+      </div>
+
+      <div class="space-y-3">
+        <h2 class="text-black dark:text-white font-medium">What you can't do</h2>
+        <ul class="list-disc list-inside space-y-1">
+          <li>Resell the wallpapers as-is (unmodified) as your own product.</li>
+          <li>Claim original authorship or copyright.</li>
+          <li>Redistribute on competing wallpaper platforms.</li>
+        </ul>
+      </div>
+
+      <div class="space-y-3">
+        <h2 class="text-black dark:text-white font-medium">Attribution</h2>
+        <p>
+          Attribution is <strong class="text-black dark:text-white">not required</strong>, but always appreciated.
+        </p>
+      </div>
+
+      <hr class="border-neutral-200 dark:border-neutral-800" />
+
+      <p class="text-sm text-neutral-500">
+        This license may be updated at any time. Previously downloaded wallpapers
+        retain the license under which they were downloaded.
+      </p>
+    </div>
+  </main>
+
+  <Footer />
+</Layout>

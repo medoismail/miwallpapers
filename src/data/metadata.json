@@ -1,0 +1,39 @@
+{
+  "images": [
+    {
+      "id": "midnight-gradient",
+      "title": "Midnight Gradient",
+      "tags": [],
+      "width": 1080,
+      "height": 1920,
+      "aspectRatio": "1080:1920",
+      "createdAt": "2026-02-27",
+      "dominantColor": "#282848",
+      "placeholder": "data:image/webp;base64,UklGRk4AAABXRUJQVlA4IEIAAABwAwCdASoUACQAPzmMuFavKSSjqrgN+eAnCWUAxNgO/9SnXWAA/uyIgJD03MBot7IcGjfxJzk3tNIrtj8B6qAAAAA=",
+      "original": "/images/originals/midnight-gradient.jpg",
+      "srcSet": {
+        "480": "/images/480/midnight-gradient.webp",
+        "720": "/images/720/midnight-gradient.webp",
+        "1080": "/images/1080/midnight-gradient.webp"
+      }
+    },
+    {
+      "id": "warm-waves",
+      "title": "Warm Waves",
+      "tags": [],
+      "width": 1080,
+      "height": 1920,
+      "aspectRatio": "1080:1920",
+      "createdAt": "2026-02-27",
+      "dominantColor": "#c888b8",
+      "placeholder": "data:image/webp;base64,UklGRmwAAABXRUJQVlA4IGAAAABwBACdASoUACQAPzF8tVOuriUitVgMAdAmCWQAsR/WAkTvKnEfh8OwGDIUIAD+iqigw8d28eFIRCYfUhNSxWbe5r8kCMUZFzpLNmXj4kmXDlueP3aEAwfhAkRFDacAAAA=",
+      "original": "/images/originals/warm-waves.jpg",
+      "srcSet": {
+        "480": "/images/480/warm-waves.webp",
+        "720": "/images/720/warm-waves.webp",
+        "1080": "/images/1080/warm-waves.webp"
+      }
+    }
+  ],
+  "tags": []
+}

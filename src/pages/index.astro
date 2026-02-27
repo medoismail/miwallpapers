@@ -1,0 +1,282 @@
+---
+import "@/styles/global.css";
+import Layout from "../layouts/Layout.astro";
+import SEO from "../components/SEO.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import Gallery from "../components/Gallery.astro";
+import { siteConfig, cdnUrl } from "../config";
+import metadata from "../data/metadata.json";
+---
+
+<Layout>
+  <SEO slot="head" />
+  <Header />
+
+  <main class="flex-1">
+    <Gallery />
+  </main>
+
+  <Footer />
+
+  {/* ═══════════════════════════════════════════════════
+      VIEWER MODAL — hidden by default, opened by JS
+      ═══════════════════════════════════════════════════ */}
+  <div
+    id="viewer"
+    class="fixed inset-0 z-50 hidden flex-col bg-black"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Photo viewer"
+  >
+    {/* Top bar */}
+    <div class="flex items-center justify-between p-3 text-white/80">
+      <span id="viewer-title" class="text-sm font-medium truncate max-w-[60%]"></span>
+      <button id="viewer-close" aria-label="Close" class="p-2 rounded-full hover:bg-white/10 transition-colors">
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path d="M6 18 18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    {/* Image area */}
+    <div id="viewer-stage" class="relative flex-1 flex items-center justify-center overflow-hidden touch-none select-none">
+      <img id="viewer-img" class="max-h-full max-w-full object-contain transition-opacity duration-200" draggable="false" alt="" />
+
+      {/* Nav arrows (hidden on mobile — use swipe) */}
+      <button id="viewer-prev" aria-label="Previous" class="hidden sm:flex absolute left-2 top-1/2 -translate-y-1/2 items-center justify-center h-10 w-10 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6" /></svg>
+      </button>
+      <button id="viewer-next" aria-label="Next" class="hidden sm:flex absolute right-2 top-1/2 -translate-y-1/2 items-center justify-center h-10 w-10 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6" /></svg>
+      </button>
+    </div>
+
+    {/* Bottom actions */}
+    <div class="flex items-center justify-center gap-3 p-4">
+      <button id="viewer-download" class="flex items-center gap-2 rounded-full bg-white text-black px-5 py-2.5 text-sm font-medium hover:bg-neutral-200 transition-colors">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>
+        Download
+      </button>
+      <button id="viewer-copy" aria-label="Copy link" class="flex items-center justify-center h-10 w-10 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
+      </button>
+      <button id="viewer-share" aria-label="Share" class="flex items-center justify-center h-10 w-10 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98" /></svg>
+      </button>
+    </div>
+
+    {/* Toast */}
+    <div id="viewer-toast" class="pointer-events-none fixed bottom-24 left-1/2 -translate-x-1/2 rounded-full bg-white text-black px-4 py-2 text-sm font-medium opacity-0 transition-opacity duration-300"></div>
+  </div>
+
+  {/* ═══════════════════════════════════════════════════
+      CLIENT-SIDE SCRIPTS
+      ═══════════════════════════════════════════════════ */}
+  <script define:vars={{ imagesJSON: JSON.stringify(metadata.images), githubUser: siteConfig.github.user, githubRepo: siteConfig.github.repo, githubBranch: siteConfig.github.branch }}>
+    /* ---------- DATA ---------- */
+    const images = JSON.parse(imagesJSON);
+
+    function cdnUrl(filepath) {
+      return `https://cdn.jsdelivr.net/gh/${githubUser}/${githubRepo}@${githubBranch}/${filepath}`;
+    }
+
+    /* ---------- IMAGE LAZY-LOAD FADE ---------- */
+    document.querySelectorAll(".wall-img").forEach((img) => {
+      function show() { img.classList.add("loaded"); }
+      if (img.complete && img.naturalWidth > 0) show();
+      else img.addEventListener("load", show);
+    });
+
+    /* ---------- SEARCH & FILTER ---------- */
+    const searchInput = document.getElementById("search");
+    const galleryEl = document.getElementById("gallery");
+    const items = [...document.querySelectorAll(".gallery-item")];
+    const noResults = document.getElementById("no-results");
+    const tagBtns = [...document.querySelectorAll(".tag-btn")];
+
+    let activeTag = "all";
+
+    function filterGallery() {
+      const q = searchInput.value.trim().toLowerCase();
+      let visible = 0;
+      items.forEach((el) => {
+        const tags = el.dataset.tags || "";
+        const title = el.dataset.title || "";
+        const matchTag = activeTag === "all" || tags.split(",").includes(activeTag);
+        const matchSearch = !q || title.includes(q) || tags.includes(q);
+        const show = matchTag && matchSearch;
+        el.style.display = show ? "" : "none";
+        if (show) visible++;
+      });
+      noResults.classList.toggle("hidden", visible > 0);
+    }
+
+    searchInput.addEventListener("input", filterGallery);
+
+    tagBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        activeTag = btn.dataset.tag;
+        tagBtns.forEach((b) => {
+          const isActive = b === btn;
+          b.classList.toggle("bg-black", isActive);
+          b.classList.toggle("text-white", isActive);
+          b.classList.toggle("dark:bg-white", isActive);
+          b.classList.toggle("dark:text-black", isActive);
+        });
+        filterGallery();
+      });
+    });
+
+    /* ---------- VIEWER ---------- */
+    const viewer = document.getElementById("viewer");
+    const viewerImg = document.getElementById("viewer-img");
+    const viewerTitle = document.getElementById("viewer-title");
+    const viewerClose = document.getElementById("viewer-close");
+    const viewerPrev = document.getElementById("viewer-prev");
+    const viewerNext = document.getElementById("viewer-next");
+    const viewerDownload = document.getElementById("viewer-download");
+    const viewerCopy = document.getElementById("viewer-copy");
+    const viewerShare = document.getElementById("viewer-share");
+    const viewerToast = document.getElementById("viewer-toast");
+
+    let current = -1;
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    function visibleIndices() {
+      return items.reduce((acc, el, i) => {
+        if (el.style.display !== "none") acc.push(i);
+        return acc;
+      }, []);
+    }
+
+    function openViewer(index) {
+      current = index;
+      const img = images[index];
+      if (!img) return;
+
+      viewerImg.src = img.srcSet[1080] || img.srcSet[720] || img.srcSet[480];
+      viewerImg.alt = img.title;
+      viewerTitle.textContent = img.title;
+      viewer.classList.remove("hidden");
+      viewer.classList.add("flex");
+      document.body.style.overflow = "hidden";
+
+      history.pushState({ viewer: true, id: img.id }, "", `/p/${img.id}`);
+    }
+
+    function closeViewer() {
+      viewer.classList.add("hidden");
+      viewer.classList.remove("flex");
+      document.body.style.overflow = "";
+      if (history.state && history.state.viewer) history.back();
+    }
+
+    function navigate(dir) {
+      const vis = visibleIndices();
+      if (vis.length === 0) return;
+      const pos = vis.indexOf(current);
+      const next = (pos + dir + vis.length) % vis.length;
+      current = vis[next];
+      const img = images[current];
+      viewerImg.style.opacity = "0";
+      setTimeout(() => {
+        viewerImg.src = img.srcSet[1080] || img.srcSet[720] || img.srcSet[480];
+        viewerImg.alt = img.title;
+        viewerTitle.textContent = img.title;
+        viewerImg.style.opacity = "1";
+        history.replaceState({ viewer: true, id: img.id }, "", `/p/${img.id}`);
+      }, 150);
+    }
+
+    function toast(msg) {
+      viewerToast.textContent = msg;
+      viewerToast.style.opacity = "1";
+      setTimeout(() => { viewerToast.style.opacity = "0"; }, 1800);
+    }
+
+    async function downloadOriginal() {
+      const img = images[current];
+      if (!img) return;
+      const url = cdnUrl("public" + img.original);
+      try {
+        const res = await fetch(url);
+        const blob = await res.blob();
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = img.id + img.original.substring(img.original.lastIndexOf("."));
+        a.click();
+        URL.revokeObjectURL(a.href);
+      } catch {
+        window.open(url, "_blank");
+      }
+    }
+
+    function copyLink() {
+      const img = images[current];
+      if (!img) return;
+      const url = `${location.origin}/p/${img.id}`;
+      navigator.clipboard.writeText(url).then(() => toast("Link copied"));
+    }
+
+    function share() {
+      const img = images[current];
+      if (!img || !navigator.share) { copyLink(); return; }
+      navigator.share({ title: img.title, url: `${location.origin}/p/${img.id}` }).catch(() => {});
+    }
+
+    /* Event: open viewer from gallery click */
+    items.forEach((el) => {
+      el.addEventListener("click", (e) => {
+        e.preventDefault();
+        openViewer(Number(el.dataset.index));
+      });
+    });
+
+    /* Event: buttons */
+    viewerClose.addEventListener("click", closeViewer);
+    viewerPrev.addEventListener("click", () => navigate(-1));
+    viewerNext.addEventListener("click", () => navigate(1));
+    viewerDownload.addEventListener("click", downloadOriginal);
+    viewerCopy.addEventListener("click", copyLink);
+    viewerShare.addEventListener("click", share);
+
+    /* Event: keyboard */
+    document.addEventListener("keydown", (e) => {
+      if (viewer.classList.contains("hidden")) return;
+      if (e.key === "Escape") closeViewer();
+      if (e.key === "ArrowLeft") navigate(-1);
+      if (e.key === "ArrowRight") navigate(1);
+    });
+
+    /* Event: touch swipe */
+    const stage = document.getElementById("viewer-stage");
+    stage.addEventListener("touchstart", (e) => {
+      touchStartX = e.changedTouches[0].clientX;
+      touchStartY = e.changedTouches[0].clientY;
+    }, { passive: true });
+
+    stage.addEventListener("touchend", (e) => {
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      const dy = e.changedTouches[0].clientY - touchStartY;
+      const absDx = Math.abs(dx);
+      const absDy = Math.abs(dy);
+
+      if (absDx > 50 && absDx > absDy) {
+        navigate(dx < 0 ? 1 : -1);
+      } else if (dy > 80 && absDy > absDx) {
+        closeViewer();
+      }
+    }, { passive: true });
+
+    /* Event: browser back button */
+    window.addEventListener("popstate", () => {
+      if (!viewer.classList.contains("hidden")) {
+        viewer.classList.add("hidden");
+        viewer.classList.remove("flex");
+        document.body.style.overflow = "";
+      }
+    });
+  </script>
+</Layout>

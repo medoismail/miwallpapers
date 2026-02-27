@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-white text-black antialiased;
+    @apply dark:bg-black dark:text-white;
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  ::selection {
+    @apply bg-black text-white dark:bg-white dark:text-black;
+  }
+}
+
+@layer components {
+  /* Gallery card image fade-in on load */
+  .wall-img {
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .wall-img.loaded {
+    opacity: 1;
+  }
+
+  /* Viewer backdrop blur (progressive enhancement) */
+  .viewer-backdrop {
+    -webkit-backdrop-filter: blur(40px);
+    backdrop-filter: blur(40px);
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}

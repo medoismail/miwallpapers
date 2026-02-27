@@ -1,0 +1,37 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  url?: string;
+}
+
+import { siteConfig } from "../config";
+
+const {
+  title = siteConfig.title,
+  description = siteConfig.description,
+  image,
+  url = Astro.url.href,
+} = Astro.props;
+
+const fullTitle =
+  title === siteConfig.title ? title : `${title} — ${siteConfig.title}`;
+---
+
+<title>{fullTitle}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={url} />
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content={fullTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={url} />
+{image && <meta property="og:image" content={image} />}
+
+<!-- Twitter -->
+<meta name="twitter:card" content={image ? "summary_large_image" : "summary"} />
+<meta name="twitter:title" content={fullTitle} />
+<meta name="twitter:description" content={description} />
+{image && <meta name="twitter:image" content={image} />}
