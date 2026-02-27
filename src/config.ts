@@ -1,5 +1,5 @@
 export const siteConfig = {
-  title: "Wallpapers",
+  title: "MI Wallpapers",
   description: "Free mobile wallpapers. Personal & commercial use.",
   siteUrl: "https://miwallpapers.vercel.app",
 
