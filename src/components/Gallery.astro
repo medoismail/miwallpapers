@@ -4,31 +4,9 @@ import metadata from "../data/metadata.json";
 const { images, tags } = metadata;
 ---
 
-{/* ── Search & Filters ─────────────────────────────── */}
-<div class="mx-auto w-full max-w-6xl px-4 pt-6 pb-2 flex flex-col gap-3">
-  {/* Search */}
-  <div class="relative">
-    <svg
-      class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      stroke-width="2"
-    >
-      <circle cx="11" cy="11" r="8" />
-      <path d="m21 21-4.35-4.35" />
-    </svg>
-    <input
-      id="search"
-      type="search"
-      placeholder="Search wallpapers…"
-      autocomplete="off"
-      class="w-full rounded-full border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 py-2 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-shadow"
-    />
-  </div>
-
-  {/* Tag pills */}
-  {tags.length > 0 && (
+{/* ── Tag filters (only if tags exist) ────────────── */}
+{tags.length > 0 && (
+  <div class="mx-auto w-full max-w-6xl px-4 pt-6 pb-2">
     <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
       <button
         data-tag="all"
@@ -45,13 +23,13 @@ const { images, tags } = metadata;
         </button>
       ))}
     </div>
-  )}
-</div>
+  </div>
+)}
 
 {/* ── Grid ──────────────────────────────────────────── */}
 <div
   id="gallery"
-  class="mx-auto w-full max-w-6xl columns-2 sm:columns-3 lg:columns-4 gap-1 px-1 py-2"
+  class="mx-auto w-full max-w-6xl columns-2 sm:columns-3 lg:columns-4 gap-1 px-1 py-4"
 >
   {images.map((img: any, i: number) => (
     <a
@@ -59,7 +37,6 @@ const { images, tags } = metadata;
       class="gallery-item mb-1 block break-inside-avoid overflow-hidden"
       data-index={i}
       data-tags={img.tags.join(",")}
-      data-title={img.title.toLowerCase()}
     >
       <div
         class="relative w-full"
@@ -69,7 +46,7 @@ const { images, tags } = metadata;
           src={img.srcSet[480]}
           srcset={`${img.srcSet[480]} 480w, ${img.srcSet[720]} 720w, ${img.srcSet[1080]} 1080w`}
           sizes="(max-width:640px) 50vw, (max-width:1024px) 33vw, 25vw"
-          alt={img.title}
+          alt=""
           loading="lazy"
           decoding="async"
           class="wall-img absolute inset-0 h-full w-full object-cover"
@@ -86,7 +63,6 @@ const { images, tags } = metadata;
   </p>
 )}
 
-{/* ── Empty search state ─────────────────────────── */}
 <p id="no-results" class="hidden py-24 text-center text-neutral-400">
-  No wallpapers match your search.
+  No wallpapers match your filter.
 </p>

@@ -20,7 +20,7 @@ import metadata from "../data/metadata.json";
   <Footer />
 
   {/* ═══════════════════════════════════════════════════
-      VIEWER MODAL — hidden by default, opened by JS
+      VIEWER MODAL
       ═══════════════════════════════════════════════════ */}
   <div
     id="viewer"
@@ -81,43 +81,35 @@ import metadata from "../data/metadata.json";
     }
 
     /* ---------- IMAGE LAZY-LOAD FADE ---------- */
-    document.querySelectorAll(".wall-img").forEach((img) => {
+    document.querySelectorAll(".wall-img").forEach(function(img) {
       function show() { img.classList.add("loaded"); }
       if (img.complete && img.naturalWidth > 0) show();
       else img.addEventListener("load", show);
     });
 
-    /* ---------- SEARCH & FILTER ---------- */
-    const searchInput = document.getElementById("search");
-    const galleryEl = document.getElementById("gallery");
-    const items = [...document.querySelectorAll(".gallery-item")];
-    const noResults = document.getElementById("no-results");
-    const tagBtns = [...document.querySelectorAll(".tag-btn")];
-
-    let activeTag = "all";
+    /* ---------- GALLERY ---------- */
+    var galleryEl = document.getElementById("gallery");
+    var items = Array.prototype.slice.call(document.querySelectorAll(".gallery-item"));
+    var noResults = document.getElementById("no-results");
+    var tagBtns = Array.prototype.slice.call(document.querySelectorAll(".tag-btn"));
+    var activeTag = "all";
 
     function filterGallery() {
-      const q = searchInput.value.trim().toLowerCase();
-      let visible = 0;
-      items.forEach((el) => {
-        const tags = el.dataset.tags || "";
-        const title = el.dataset.title || "";
-        const matchTag = activeTag === "all" || tags.split(",").includes(activeTag);
-        const matchSearch = !q || title.includes(q) || tags.includes(q);
-        const show = matchTag && matchSearch;
-        el.style.display = show ? "" : "none";
-        if (show) visible++;
+      var visible = 0;
+      items.forEach(function(el) {
+        var tags = el.getAttribute("data-tags") || "";
+        var matchTag = activeTag === "all" || tags.split(",").indexOf(activeTag) !== -1;
+        el.style.display = matchTag ? "" : "none";
+        if (matchTag) visible++;
       });
-      noResults.classList.toggle("hidden", visible > 0);
+      if (noResults) noResults.classList.toggle("hidden", visible > 0);
     }
 
-    searchInput.addEventListener("input", filterGallery);
-
-    tagBtns.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        activeTag = btn.dataset.tag;
-        tagBtns.forEach((b) => {
-          const isActive = b === btn;
+    tagBtns.forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        activeTag = btn.getAttribute("data-tag");
+        tagBtns.forEach(function(b) {
+          var isActive = b === btn;
           b.classList.toggle("bg-black", isActive);
           b.classList.toggle("text-white", isActive);
           b.classList.toggle("dark:bg-white", isActive);
@@ -128,41 +120,40 @@ import metadata from "../data/metadata.json";
     });
 
     /* ---------- VIEWER ---------- */
-    const viewer = document.getElementById("viewer");
-    const viewerImg = document.getElementById("viewer-img");
-    const viewerTitle = document.getElementById("viewer-title");
-    const viewerClose = document.getElementById("viewer-close");
-    const viewerPrev = document.getElementById("viewer-prev");
-    const viewerNext = document.getElementById("viewer-next");
-    const viewerDownload = document.getElementById("viewer-download");
-    const viewerCopy = document.getElementById("viewer-copy");
-    const viewerShare = document.getElementById("viewer-share");
-    const viewerToast = document.getElementById("viewer-toast");
+    var viewer = document.getElementById("viewer");
+    var viewerImg = document.getElementById("viewer-img");
+    var viewerClose = document.getElementById("viewer-close");
+    var viewerPrev = document.getElementById("viewer-prev");
+    var viewerNext = document.getElementById("viewer-next");
+    var viewerDownload = document.getElementById("viewer-download");
+    var viewerCopy = document.getElementById("viewer-copy");
+    var viewerShare = document.getElementById("viewer-share");
+    var viewerToast = document.getElementById("viewer-toast");
 
-    let current = -1;
-    let touchStartX = 0;
-    let touchStartY = 0;
+    var current = -1;
+    var touchStartX = 0;
+    var touchStartY = 0;
 
     function visibleIndices() {
-      return items.reduce((acc, el, i) => {
+      var acc = [];
+      items.forEach(function(el, i) {
         if (el.style.display !== "none") acc.push(i);
-        return acc;
-      }, []);
+      });
+      return acc;
     }
 
     function openViewer(index) {
       current = index;
-      const img = images[index];
+      var img = images[index];
       if (!img) return;
 
       viewerImg.src = img.srcSet[1080] || img.srcSet[720] || img.srcSet[480];
-      viewerImg.alt = img.title;
-      viewerTitle.textContent = img.title;
+      viewerImg.alt = "";
       viewer.classList.remove("hidden");
       viewer.classList.add("flex");
       document.body.style.overflow = "hidden";
 
-      history.pushState({ viewer: true, id: img.id }, "", `/p/${img.id}`);
+      history.pushState({ viewer: true, id: img.id }, "", "/p/" + img.id);
     }
 
     function closeViewer() {
@@ -173,76 +164,76 @@ import metadata from "../data/metadata.json";
     }
 
     function navigate(dir) {
-      const vis = visibleIndices();
+      var vis = visibleIndices();
       if (vis.length === 0) return;
-      const pos = vis.indexOf(current);
-      const next = (pos + dir + vis.length) % vis.length;
+      var pos = vis.indexOf(current);
+      var next = (pos + dir + vis.length) % vis.length;
       current = vis[next];
-      const img = images[current];
+      var img = images[current];
       viewerImg.style.opacity = "0";
-      setTimeout(() => {
+      setTimeout(function() {
         viewerImg.src = img.srcSet[1080] || img.srcSet[720] || img.srcSet[480];
-        viewerImg.alt = img.title;
-        viewerTitle.textContent = img.title;
+        viewerImg.alt = "";
         viewerImg.style.opacity = "1";
-        history.replaceState({ viewer: true, id: img.id }, "", `/p/${img.id}`);
+        history.replaceState({ viewer: true, id: img.id }, "", "/p/" + img.id);
       }, 150);
     }
 
     function toast(msg) {
       viewerToast.textContent = msg;
       viewerToast.style.opacity = "1";
-      setTimeout(() => { viewerToast.style.opacity = "0"; }, 1800);
+      setTimeout(function() { viewerToast.style.opacity = "0"; }, 1800);
     }
 
-    async function downloadOriginal() {
-      const img = images[current];
+    function downloadOriginal() {
+      var img = images[current];
       if (!img) return;
-      const url = cdnUrl("public" + img.original);
-      try {
-        const res = await fetch(url);
-        const blob = await res.blob();
-        const a = document.createElement("a");
+      var url = cdnUrl("public" + img.original);
+      fetch(url).then(function(res) {
+        return res.blob();
+      }).then(function(blob) {
+        var a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
         a.download = img.id + img.original.substring(img.original.lastIndexOf("."));
         a.click();
         URL.revokeObjectURL(a.href);
-      } catch {
+      }).catch(function() {
         window.open(url, "_blank");
-      }
+      });
     }
 
     function copyLink() {
-      const img = images[current];
+      var img = images[current];
       if (!img) return;
-      const url = `${location.origin}/p/${img.id}`;
-      navigator.clipboard.writeText(url).then(() => toast("Link copied"));
+      var url = location.origin + "/p/" + img.id;
+      navigator.clipboard.writeText(url).then(function() { toast("Link copied"); });
     }
 
-    function share() {
-      const img = images[current];
+    function sharePhoto() {
+      var img = images[current];
       if (!img || !navigator.share) { copyLink(); return; }
-      navigator.share({ title: img.title, url: `${location.origin}/p/${img.id}` }).catch(() => {});
+      navigator.share({ url: location.origin + "/p/" + img.id }).catch(function() {});
     }
 
     /* Event: open viewer from gallery click */
-    items.forEach((el) => {
-      el.addEventListener("click", (e) => {
+    items.forEach(function(el) {
+      el.addEventListener("click", function(e) {
         e.preventDefault();
-        openViewer(Number(el.dataset.index));
+        e.stopPropagation();
+        openViewer(Number(el.getAttribute("data-index")));
       });
     });
 
     /* Event: buttons */
     viewerClose.addEventListener("click", closeViewer);
-    viewerPrev.addEventListener("click", () => navigate(-1));
-    viewerNext.addEventListener("click", () => navigate(1));
+    viewerPrev.addEventListener("click", function() { navigate(-1); });
+    viewerNext.addEventListener("click", function() { navigate(1); });
     viewerDownload.addEventListener("click", downloadOriginal);
     viewerCopy.addEventListener("click", copyLink);
-    viewerShare.addEventListener("click", share);
+    viewerShare.addEventListener("click", sharePhoto);
 
     /* Event: keyboard */
-    document.addEventListener("keydown", (e) => {
+    document.addEventListener("keydown", function(e) {
       if (viewer.classList.contains("hidden")) return;
       if (e.key === "Escape") closeViewer();
       if (e.key === "ArrowLeft") navigate(-1);
@@ -250,17 +241,17 @@ import metadata from "../data/metadata.json";
     });
 
     /* Event: touch swipe */
-    const stage = document.getElementById("viewer-stage");
-    stage.addEventListener("touchstart", (e) => {
+    var stage = document.getElementById("viewer-stage");
+    stage.addEventListener("touchstart", function(e) {
       touchStartX = e.changedTouches[0].clientX;
       touchStartY = e.changedTouches[0].clientY;
     }, { passive: true });
 
-    stage.addEventListener("touchend", (e) => {
-      const dx = e.changedTouches[0].clientX - touchStartX;
-      const dy = e.changedTouches[0].clientY - touchStartY;
-      const absDx = Math.abs(dx);
-      const absDy = Math.abs(dy);
+    stage.addEventListener("touchend", function(e) {
+      var dx = e.changedTouches[0].clientX - touchStartX;
+      var dy = e.changedTouches[0].clientY - touchStartY;
+      var absDx = Math.abs(dx);
+      var absDy = Math.abs(dy);
 
       if (absDx > 50 && absDx > absDy) {
         navigate(dx < 0 ? 1 : -1);
@@ -270,7 +261,7 @@ import metadata from "../data/metadata.json";
     }, { passive: true });
 
     /* Event: browser back button */
-    window.addEventListener("popstate", () => {
+    window.addEventListener("popstate", function() {
       if (!viewer.classList.contains("hidden")) {
         viewer.classList.add("hidden");
         viewer.classList.remove("flex");
