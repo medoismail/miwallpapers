@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://walls.example.com/sitemap-index.xml
+Sitemap: https://miwallpapers.vercel.app/sitemap-index.xml

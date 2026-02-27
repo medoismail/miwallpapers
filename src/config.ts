@@ -1,12 +1,12 @@
 export const siteConfig = {
   title: "Wallpapers",
   description: "Free mobile wallpapers. Personal & commercial use.",
-  siteUrl: "https://walls.example.com",
+  siteUrl: "https://miwallpapers.vercel.app",
 
   // GitHub repo info — used to build jsDelivr download URLs
   github: {
-    user: "YOUR_USERNAME",
-    repo: "wallpapers",
+    user: "medoismail",
+    repo: "miwallpapers",
     branch: "main",
   },
 };
