@@ -124,6 +124,9 @@ async function main() {
     process.stdout.write("  ✓\n");
   }
 
+  // Sort newest first (by createdAt descending, then by id for stable order)
+  images.sort((a, b) => b.createdAt.localeCompare(a.createdAt) || a.id.localeCompare(b.id));
+
   // Collect all unique tags
   const tags = [...new Set(images.flatMap((i) => i.tags))].sort();
 
