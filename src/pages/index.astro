@@ -404,25 +404,30 @@ import metadata from "../data/metadata.json";
 
     var installPrompt = null;
     var installBtn = document.getElementById("install-btn");
+    var installDismiss = document.getElementById("install-dismiss");
+    var isStandalone = window.matchMedia("(display-mode: standalone)").matches
+      || window.navigator.standalone === true;
+    var wasDismissed = sessionStorage.getItem("install-dismissed");
 
-    /* Already installed or not supported — hide */
-    if (window.matchMedia("(display-mode: standalone)").matches) {
-      installBtn.style.display = "none";
+    /* Show button by default on mobile if not installed and not dismissed */
+    function shouldShowInstall() {
+      return !isStandalone && !wasDismissed;
     }
 
-    /* Dismissed before — hide for this session */
-    if (sessionStorage.getItem("install-dismissed")) {
-      installBtn.style.display = "none";
+    if (shouldShowInstall()) {
+      installBtn.style.display = "flex";
     }
 
+    /* Chrome/Edge: capture the native prompt */
     window.addEventListener("beforeinstallprompt", function(e) {
       e.preventDefault();
       installPrompt = e;
-      installBtn.style.display = "flex";
+      if (shouldShowInstall()) installBtn.style.display = "flex";
     });
 
     installBtn.addEventListener("click", function() {
       if (installPrompt) {
+        /* Android / desktop Chrome */
         installPrompt.prompt();
         installPrompt.userChoice.then(function(result) {
           if (result.outcome === "accepted") {
@@ -431,15 +436,19 @@ import metadata from "../data/metadata.json";
           installPrompt = null;
         });
       } else {
-        /* iOS Safari — show instructions */
-        alert("Tap the Share button, then \"Add to Home Screen\"");
+        /* iOS Safari — show share instructions */
+        var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+        if (isIOS) {
+          alert("Tap the Share button (box with arrow) at the bottom of Safari, then tap \"Add to Home Screen\"");
+        } else {
+          alert("Use your browser menu to add this app to your home screen");
+        }
         sessionStorage.setItem("install-dismissed", "1");
         installBtn.style.display = "none";
       }
     });
 
     /* Dismiss on X */
-    var installDismiss = document.getElementById("install-dismiss");
     installDismiss.addEventListener("click", function(e) {
       e.stopPropagation();
       installBtn.style.display = "none";
