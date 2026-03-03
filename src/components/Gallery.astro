@@ -34,7 +34,7 @@ const { images, tags } = metadata;
   {images.map((img: any, i: number) => (
     <a
       href={`/p/${img.id}`}
-      class="gallery-item mb-1 block break-inside-avoid overflow-hidden relative group"
+      class="gallery-item mb-1 block break-inside-avoid overflow-hidden relative group transition-opacity duration-300"
       data-index={i}
       data-id={img.id}
       data-tags={img.tags.join(",")}

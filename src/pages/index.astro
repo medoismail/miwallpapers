@@ -153,6 +153,14 @@ import metadata from "../data/metadata.json";
       viewer.classList.add("flex");
       document.body.style.overflow = "hidden";
 
+      /* Mark as seen and dim in gallery */
+      if (!seen[img.id]) {
+        seen[img.id] = true;
+        localStorage.setItem("seen", JSON.stringify(seen));
+        var galleryItem = document.querySelector('.gallery-item[data-id="' + img.id + '"]');
+        if (galleryItem) galleryItem.style.opacity = "0.9";
+      }
+
       history.pushState({ viewer: true, id: img.id }, "", "/p/" + img.id);
     }
 
@@ -269,6 +277,35 @@ import metadata from "../data/metadata.json";
         document.body.style.overflow = "";
       }
     });
+
+    /* ---------- SEEN (dim previously viewed photos) ---------- */
+    var seen = {};
+    try { seen = JSON.parse(localStorage.getItem("seen") || "{}"); } catch(e) {}
+
+    /* On load: dim already-seen items */
+    items.forEach(function(el) {
+      var id = el.getAttribute("data-id");
+      if (seen[id]) {
+        el.style.opacity = "0.9";
+      }
+    });
+
+    /* Mark images as seen when they scroll into view */
+    var seenObserver = new IntersectionObserver(function(entries) {
+      var changed = false;
+      entries.forEach(function(entry) {
+        if (!entry.isIntersecting) return;
+        var el = entry.target;
+        var id = el.getAttribute("data-id");
+        if (!seen[id]) {
+          seen[id] = true;
+          changed = true;
+        }
+      });
+      if (changed) localStorage.setItem("seen", JSON.stringify(seen));
+    }, { threshold: 0.5 });
+
+    items.forEach(function(el) { seenObserver.observe(el); });
 
     /* ---------- LIKES ---------- */
     var liked = {};
