@@ -3,6 +3,14 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Easing curves — Emil Kowalski's blueprint */
+    --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+    --ease-out-cubic: cubic-bezier(0.215, 0.61, 0.355, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
   html {
     -webkit-tap-highlight-color: transparent;
     scroll-behavior: smooth;
@@ -12,20 +20,89 @@
     @apply bg-white text-black antialiased;
     @apply dark:bg-black dark:text-white;
     font-feature-settings: "cv11", "ss01";
+    transition: background-color 300ms ease, color 300ms ease;
   }
 
   ::selection {
-    @apply bg-black text-white dark:bg-white dark:text-black;
+    @apply bg-neutral-900 text-white dark:bg-neutral-100 dark:text-black;
+  }
+
+  /* Balanced text wrapping for headings */
+  h1, h2, h3, h4 {
+    text-wrap: balance;
   }
 }
 
 @layer components {
-  /* Gallery card image fade-in on load */
+  /* ── Gallery card image fade-in on load ── */
   .wall-img {
     opacity: 0;
-    transition: opacity 0.4s ease;
+    transition: opacity 0.4s var(--ease-out-cubic);
   }
   .wall-img.loaded {
+    opacity: 1;
+  }
+
+  /* ── Gallery card hover lift (hover devices only) ── */
+  @media (hover: hover) {
+    .gallery-card {
+      transition: transform 250ms var(--ease-out-quint),
+                  box-shadow 250ms var(--ease-out-quint);
+    }
+    .gallery-card:hover {
+      transform: translateY(-2px) scale(1.015);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12),
+                  0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    .dark .gallery-card:hover {
+      box-shadow: 0 8px 24px rgba(255, 255, 255, 0.06),
+                  0 2px 8px rgba(255, 255, 255, 0.04);
+    }
+  }
+
+  /* ── Image edge definition ── */
+  .img-outline {
+    outline: 1px solid rgba(0, 0, 0, 0.08);
+    outline-offset: -1px;
+  }
+  .dark .img-outline {
+    outline-color: rgba(255, 255, 255, 0.08);
+  }
+
+  /* ── Scroll-reveal fade-up entrance ── */
+  @media (prefers-reduced-motion: no-preference) {
+    .gallery-card {
+      opacity: 0;
+      transform: translateY(40px) scale(0.97);
+      transition: opacity 600ms var(--ease-out-quint),
+                  transform 600ms var(--ease-out-quint);
+    }
+    .gallery-card.is-visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /* ── Viewer modal transitions ── */
+  .viewer-overlay {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 250ms var(--ease-out-cubic),
+                visibility 250ms;
+  }
+  .viewer-overlay.is-open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .viewer-content {
+    transform: scale(0.97);
+    opacity: 0;
+    transition: transform 250ms var(--ease-out-quint),
+                opacity 200ms var(--ease-out-cubic);
+  }
+  .viewer-overlay.is-open .viewer-content {
+    transform: scale(1);
     opacity: 1;
   }
 
@@ -33,6 +110,67 @@
   .viewer-backdrop {
     -webkit-backdrop-filter: blur(40px);
     backdrop-filter: blur(40px);
+  }
+
+  /* ── Like heart bounce ── */
+  @keyframes heart-bounce {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.35); }
+    60% { transform: scale(0.95); }
+    100% { transform: scale(1); }
+  }
+  .like-bounce {
+    animation: heart-bounce 400ms var(--ease-spring);
+  }
+
+  /* ── Toast slide-up ── */
+  .toast {
+    transform: translateY(8px);
+    opacity: 0;
+    transition: transform 300ms var(--ease-out-quint),
+                opacity 300ms var(--ease-out-cubic);
+    pointer-events: none;
+  }
+  .toast.is-visible {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  /* ── Tag pill transitions ── */
+  .tag-pill {
+    transition: background-color 150ms ease,
+                color 150ms ease,
+                border-color 150ms ease,
+                transform 150ms var(--ease-out-cubic);
+  }
+  @media (hover: hover) {
+    .tag-pill:hover {
+      transform: translateY(-1px);
+    }
+  }
+  .tag-pill:active {
+    transform: scale(0.97);
+  }
+
+  /* ── Theme toggle icon animation ── */
+  .theme-icon {
+    transition: transform 300ms var(--ease-out-quint),
+                opacity 200ms ease;
+  }
+
+  /* ── Install button entrance ── */
+  @media (prefers-reduced-motion: no-preference) {
+    .install-btn-enter {
+      animation: slide-up 400ms var(--ease-out-quint) both;
+      animation-delay: 1000ms;
+    }
+  }
+
+  /* ── Page content fade-in ── */
+  @media (prefers-reduced-motion: no-preference) {
+    .page-enter {
+      animation: fade-up 500ms var(--ease-out-quint) both;
+    }
   }
 }
 
@@ -43,5 +181,53 @@
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+}
+
+/* ── Keyframes ── */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Reduced motion: disable all custom animations ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
